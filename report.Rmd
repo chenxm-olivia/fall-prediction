@@ -1,0 +1,197 @@
+---
+title: "One-Year Fall Prediction in Older Adults"
+author: "Olivia Chen"
+date: "2023-12-12"
+output: html_document
+---
+
+## 1 Introduction
+
+Falls remain an important public health concern among the aging population in the United States. 
+In 2018, approximately a quarter of adults aged 65 years and older experienced at least one fall in the past year, and among those who fell, half of them suffered multiple falls within the same year [1]. 
+Recurrent falls impose greater adverse effects on health compared to a single fall. Observational studies have shown that older adults who fall recurrently (i.e., two or more falls in a year) not only have a greater risk of injury, fracture, loss of independence, disabilities, and mortality [2-5], but also tend to develop a fear of falling, which subsequently increases their risk of future falls [6]. 
+Notably, community-dwelling older adults are particularly vulnerable to falls, in comparison to those living in long-term care settings, given their limited access to healthcare resources and their reliance on family members or other caregivers for support [7].
+
+Fall risk assessment tools have been developed to aid in determining the risk of falls for high-risk individuals so as to intervene to prevent future falls. 
+Common risk factors identified by the Stopping Elderly Accidents, Deaths & Injuries (STEADI) initiative include poor gait, strength, and balance, medications that increase fall risk, potential home hazards, orthostatic hypertension, visual impairment, feet/footwear issues, vitamin D deficiency, and comorbidities [8].
+
+This analysis aims 1) to identify the most influential risk factors for the occurrence of any falls and the occurrence of multiple falls in the following year among community-dwelling older adults and 2) to develop and evaluate the prediction models for one-year fall risk using regularized regression methods.
+
+
+## 2 Methods
+
+### 2.1 Data source
+
+I leveraged the National Health and Aging Trends Study (NHATS) for this analysis, which is a nationally representative prospective cohort study of U.S. Medicare beneficiaries aged 65 years and older. 
+
+Most of the common risk factors as well as self-reported fall status in the past year are routinely collected in the Sample Person interview of NHATS, making NHATS a valuable data source for the research question.
+
+### 2.2 Analytic sample
+
+I used the baseline data from Round 1 (2011) and follow-up data from Round 2 (2012) of the NHATS cohort. Follow-up records were linked using unique participant identifiers.
+Participants who meet the eligibility criteria were included in the analytic sample:
+
+* Residing in community or non-nursing home residential care settings
+* Not blind in Round 1
+* No dementia or Alzheimer’s Disease in Round 1
+* Reported fall status in the past year in Round 2
+* All predictor variables are non-missing
+
+### 2.3 Outcome variables
+
+The primary outcome of interest is the one-year risk of falls (1 or more falls). 
+The secondary outcome of interest is the one-year risk of multiple falls (2 or more falls).
+
+Participant’s fall status during the one-year follow-up period since baseline was determined by their self-report of fall status in Round 2. Participants were asked if they had fallen down since the last interview month and year; if yes, participants were further asked if they had fallen down more than one time. 
+Individuals who reported "Yes" to the first question were identified as having any fall during one-year follow-up, and a binary indicator for any fall was created accordingly. 
+Individuals who reported “Yes” to both questions were identified as having multiple falls during one-year follow-up, and a binary indicator for multiple falls was created accordingly.
+
+### 2.4 Predictor variables 
+
+Potential predictor variables relevant to this analysis were collected in Round 1, including age, gender, race/ethnicity, education, mobility device use, history of falls, fear of falling, severity of depressive symptoms, presence of balance problem, hearing aid use, hearing capacity, wearing glasses, vision capacity, physical performance measured using the short physical performance battery (SPPB), comorbidities (heart attack, heart disease, high blood pressure, arthritis, osteoporosis, diabetes, lung disease, stroke, and cancer), home floor in need of repair, and presence of other tripping hazard.
+
+Additionally, SPPB scores range from 0 (worst performance) to 12 (best performance); it was measured based on three activities: balance stand, walking speed, and repeated chair stand. Each of these activities was scored 0 to 4 and summed to obtain the SPPB score. Considering that certain domain(s) may be more influential than others, I included both the individual component scores and the total SPPB score as potential predictors.
+
+### 2.5 Statistical analysis
+
+The study sample was randomly split into training (80%) and testing (20%) samples. 
+Exploratory analysis of the relationships between predictors and the outcomes was performed using the entire study sample. The training sample was used for identifying influential predictors and model selection; the testing sample was used to evaluate model performance.
+
+Considering that the potential predictors are likely highly correlated with each other, regularized regression based on the least absolute shrinkage and selection operator (LASSO) was used to build the predictive models. 
+I applied the LASSO algorithm to a logistic regression model predicting one-year fall risk, with tenfold cross-validation to select the optimal (minimum) value for regularization. 
+Then, I applied the best LASSO model selected in the training cohort to the testing sample and predicted probabilities of one-year fall risk for each individual.
+
+To evaluate the model performance, the area under the receiver operating characteristic (ROC) curve was plotted, and the area under the ROC curve (AUC) was reported. 
+
+Furthermore, sensitivity, specificity, positive predictive value (PPV), and negative predictive value (NPV) were calculated for the binary classification of the predicted outcome based on a threshold of 0.5, to evaluate the performance of a potential binary classification test.
+
+* Sensitivity = Pr(predicted outcome + | true outcome +)
+* Specificity = Pr(predicted outcome - | true outcome -)
+* PPV = Pr(true outcome + | predicted outcome +)
+* NPV = Pr(true outcome - | predicted outcome -)
+
+The LASSO analysis was performed for one-year risk of any fall (primary outcome) and one-year risk of multiple falls (secondary outcome) respectively. 
+
+
+## 3 Results
+
+The analytic sample consisted of 4649 observations, among which 31.6% (n = 1469) had at least one fall (any fall), and 14.0% (n = 650) had multiple falls at one-year follow-up. 
+
+In the training sample (n = 3719), 32.5% (n = 1208) had any fall and 14.6% (n = 543) had multiple falls at one-year follow-up.
+In the testing sample (n = 930), 28.1% (n = 261) had any fall and 11.5% (n = 107) had multiple falls at one-year follow-up.
+
+### 3.1 Exploratory analysis
+
+First, I examined the distribution of each potential predictor by fall status at one-year follow-up (i.e., in Round 2). The results show that the vast majority of potential predictors clearly differed by fall status at one-year follow-up.
+
+Specifically, individuals who experienced falls during follow-up tend to be younger, female, have non-Hispanic White race, have less education, use mobility device, worry about falling, have more depressive symptoms, have balance problem, use hearing aid, have impaired vision capacity, have a lower SPPB total score and lower component scores, have more comorbidities, and have home tripping hazard other than flooring.
+
+I plotted the distributions of three theoretically important predictors by fall status at one-year follow-up.
+
+#### 3.1.1 History of falls
+
+<img src="figures/figure1_fallstat_fallstat1y.png" width="80%" alt="Figure 1"/>
+
+Figure 1 shows the distribution of fall history at baseline by fall status at one-year follow up. 
+
+The majority of individuals who had no falls at baseline continued to have no falls at one-year follow-up and that individuals who had multiple falls at baseline predominantly continued to have multiple falls at one-year follow-up.
+
+This result suggests that a history of falls may be associated with a higher likelihood of future falls. Individuals with a history of falls may be especially vulnerable to future falls and require more attention from caregivers.
+
+#### 3.1.2 SPPB score 
+
+<img src="figures/figure2_sppb_fallstat1y.png" width="80%" alt="Figure 2"/>
+
+Figure 2 shows the distribution of SPPB score by fall status at one-year follow up. 
+
+Individuals who had no falls at one-year follow-up clustered at higher baseline SPPB scores, suggesting their better physical performance at baseline. In contrast, SPPB scores of those with a single fall and those with multiple falls at one-year follow-up are distributed much more evenly across the full range of the SPPB scores.
+In particular, those with multiple falls are more common than those with a single fall at SPPB scores of 6 or less, suggesting their relatively worse physical performance.
+
+These findings suggest that worse physical performance may be a potential strong predictor of future falls. Since physical performance is a modifiable risk factor, individuals with poor physical performance may consider undertaking effective interventions targeting the improvement of physical function to reduce fall risk. 
+
+#### 3.1.3 Age group
+
+<img src="figures/figure3_age_fallstat1y.png" width="80%" alt="Figure 3"/>
+
+Figure 3 shows the age distribution by fall status at one-year follow up. 
+
+Similar to the distribution of SPPB score, individuals who had no falls at one-year follow-up clustered at younger age groups, while the distributions for those with a single fall and those with multiple falls are relatively uniform across all age groups.
+Additionally, individuals with multiple falls are more frequent than individuals with a single fall at the age of 85 and older, suggesting an elevated risk of future falls in the oldest group.
+
+### 3.2 LASSO analysis
+
+#### 3.2.1 One-year risk prediction for any fall
+
+Using the training sample, 25 variables were selected via LASSO for predicting any fall. The five most influential predictors for one-year risk of any fall are: 
+
+* History of any fall at baseline: odds ratio (OR) = 2.41
+* History of multiple falls at baseline: OR = 2.12
+* Presence of balance problem: OR = 1.41
+* Non-Hispanic Black race: OR = 0.72
+* Hearing capacity: OR = 1.36
+
+<img src="figures/figure4_roc_anyfall1y.png" width="60%" alt="Figure 4"/>
+
+Figure 4 presents the ROC curve for the one-year risk prediction of experiencing any fall using the testing sample, with an AUC of 0.7069.
+
+The ROC curve is clearly above the line of no discrimination, suggesting the LASSO model can distinguish individuals at high risk of any fall in the following year better than a random chance. An AUC of 0.7069 suggests acceptable discrimination, while the prediction is not very accurate. 
+
+Based on a threshold of 0.5 for binary classification:
+
+* Sensitivity = 29.9%
+* Specificity = 90.0%
+* PPV = 53.8%
+* NPV = 76.7%
+
+#### 3.2.2 One-year risk prediction for multiple falls
+
+Using the training sample, 20 variables were selected via LASSO for predicting multiple falls. The five most influential predictors for one-year risk of multiple falls are:
+
+* History of multiple falls at baseline: OR = 3.27
+* History of any fall at baseline: OR = 2.60
+* Other non-Hispanic race: OR = 0.46
+* Hearing capacity: OR = 1.70
+* Worry about falling: OR = 1.22
+
+<img src="figures/figure5_roc_multifall1y.png" width="60%" alt="Figure 5"/>
+
+Figure 5 presents the ROC curve for the one-year risk prediction of experiencing multiple falls using the testing sample, with AUC of 0.7687.
+
+Similarly, the ROC curve is clearly above the line of no discrimination, suggesting the LASSO model can distinguish individuals at high risk of multiple falls in the following year better than a random chance. An AUC of 0.7687 suggests acceptable or fair discrimination; although the performance is slightly better compared to the prediction of any fall, the prediction is still not perfect. 
+
+Based on a threshold of 0.5 for binary classification:
+
+* Sensitivity = 26.2%
+* Specificity = 97.4%
+* PPV = 57.1%
+* NPV = 91.0%
+
+## 4 Key findings and implications
+
+Comparing the results above, LASSO selected different sets of predictors for the one-year risk predictions of any fall and multiple falls, while the top two influential predictors for both prediction models are the history of any fall and the history of multiple falls. This highlights the importance of the history of falls in future fall prediction.
+
+Additionally, the prediction model for multiple falls shows better performance than the prediction model for any fall. One explanation for this finding is that there are more persistent risk factors (e.g. characteristics that do not vary much with time) associated with recurrent falls compared to a single fall, and these persistent risk factors are more likely to be captured in such surveys. 
+
+When using a binary classification threshold of 0.5, the NPV (probability that an individual with a negative predicted result truly does not have the outcome) for multiple falls seems adequately high (91.0%) and is considerably higher than that for any fall (76.7%). This finding suggests that the binary classification based on the LASSO model prediction of multiple falls might be useful for screening to identify vulnerable individuals at high risk for multiple future falls among community-dwelling older adults.
+
+A meaningful next step of this analysis would be to repeat the random process multiple times and obtain confidence intervals for the estimates. In practice, it seems feasible to develop a simple, effective, easy-to-use fall risk prediction tool for daily use in households.
+
+
+## 5 References
+
+1. Moreland B, Kakara R, Henry A. Trends in Nonfatal Falls and Fall-Related Injuries Among Adults Aged ≥65 Years — United States, 2012–2018. 2020:69:875–881. MMWR Morb Mortal Wkly Rep. 
+
+2. Tchalla AE, Dufour AB, Travison TG, et al. Patterns, Predictors, and Outcomes of Falls Trajectories in Older Adults: The MOBILIZE Boston Study with 5 Years of Follow-Up. PLOS ONE. 2014;9(9):e106363. doi:10.1371/journal.pone.0106363
+
+3. Liu IT, Liang FW, Wang ST, Chang CM, Lu TH, Wu CH. The effects of falls on the prediction of osteoporotic fractures: epidemiological cohort study. Archives of Osteoporosis. 2021/07/10 2021;16(1):110. doi:10.1007/s11657-021-00977-8
+
+4. Choi NG, Marti CN, Choi BY, Kunik MM. Recurrent Falls over Three Years among Older Adults Age 70+: Associations with Physical and Mental Health Status, Exercise, and Hospital Stay. J Appl Gerontol. May 2023;42(5):1089-1100. doi:10.1177/07334648221150884
+
+5. Cunningham C, O' Sullivan R, Caserotti P, Tully MA. Consequences of physical inactivity in older adults: A systematic review of reviews and meta-analyses. Scandinavian Journal of Medicine & Science in Sports. 2020/05/01 2020;30(5):816-827. doi:https://doi.org/10.1111/sms.13616
+
+6. Garbin AJ, Fisher BE. Examining the Role of Physical Function on Future Fall Likelihood in Older Adults With a Fear of Falling, With and Without Activity Restriction. J Aging Health. Apr 23 2023:8982643231170308. doi:10.1177/08982643231170308
+
+7. Centers for Disease Control and Prevention. Identifying Vulnerable Older Adults and Legal Options for Increasing Their Protection During All-Hazards Emergencies: A Cross-Sector Guide for States and Communities. 2012. 
+
+8. STEADI — Older Adult Fall Prevention. Centers for Disease Control and Prevention, National Center for Injury Prevention and Control. Updated April 13, 2023. Accessed September 7, 2023. https://www.cdc.gov/steadi/
+
